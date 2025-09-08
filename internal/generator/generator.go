@@ -119,20 +119,16 @@ func (g *Generator) Generate(ctx context.Context, outputFile string) error {
 	// Start writer goroutine
 	writerWg.Add(1)
 	passwordCount := 0
-	uniquePasswords := make(map[string]struct{})
 
 	go func() {
 		defer writerWg.Done()
 		for password := range resultChan {
-			if _, exists := uniquePasswords[password]; !exists {
-				uniquePasswords[password] = struct{}{}
-				fmt.Fprintln(writer, password)
-				passwordCount++
+			fmt.Fprintln(writer, password)
+			passwordCount++
 
-				if passwordCount%10000 == 0 {
-					fmt.Printf("\rGenerated %d unique passwords...", passwordCount)
-					writer.Flush() // Flush periodically
-				}
+			if passwordCount%10000 == 0 {
+				fmt.Printf("\rGenerated %d unique passwords...", passwordCount)
+				writer.Flush() // Flush periodically
 			}
 		}
 	}()

@@ -36,13 +36,6 @@ func (pg *PatternGenerator) ProcessPattern(job PasswordJob) string {
 		for strings.Contains(password, "<SEP>") && separatorIndex < len(job.Separators) {
 			password = strings.Replace(password, "<SEP>", job.Separators[separatorIndex], 1)
 			separatorIndex++
-			// Find the first occurrence of <SEP> and replace it with the corresponding separator
-			// sepIndex := strings.Index(password, "<SEP>")
-			// if sepIndex != -1 {
-			// 	// Replace only the first occurrence
-			// 	password = password[:sepIndex] + job.Separators[separatorIndex] + password[sepIndex+5:]
-			// 	separatorIndex++
-			// }
 		}
 	}
 
