@@ -1,0 +1,190 @@
+{
+  "common_words": [
+    "password",
+    "admin",
+    "guest",
+    "wifi",
+    "wireless",
+    "IT",
+    "tech",
+    "pass",
+    "login",
+    "user",
+    "123",
+    "root",
+    "default",
+    "access",
+    "network",
+    "internet",
+    "secure",
+    "temp",
+    "test"
+  ],
+  "separators": [
+    "",
+    "@",
+    "_",
+    "-",
+    ".",
+    "#",
+    "!",
+    "*",
+    "+",
+    "~",
+    "%",
+    "&",
+    "^"
+  ],
+  "number_patterns": [
+    "ddd",
+    "1",
+    "12",
+    "123",
+    "1234",
+    "12345",
+    "123456",
+    "01",
+    "001",
+    "100",
+    "1000"
+  ],
+  "patterns": [
+    "<CUSTOM>",
+    "<COMMON>",
+    "<SSID>",
+    "<CUSTOM><SEP><YEAR>",
+    "<CUSTOM><SEP><NUM>",
+    "<CUSTOM><SEP><COMMON>",
+    "<COMMON><SEP><YEAR>",
+    "<COMMON><SEP><NUM>",
+    "<COMMON><SEP><CUSTOM>",
+    "<SSID><SEP><YEAR>",
+    "<SSID><SEP><NUM>",
+    "<SSID><SEP><CUSTOM>",
+    "<YEAR><SEP><CUSTOM>",
+    "<YEAR><SEP><COMMON>",
+    "<YEAR><SEP><SSID>",
+    "<NUM><SEP><CUSTOM>",
+    "<NUM><SEP><COMMON>",
+    "<NUM><SEP><SSID>",
+    "<SEP><CUSTOM><SEP><SSID><SEP><YEAR>",
+    "<COMMON><SEP><CUSTOM><YEAR>"
+  ],
+  "substitutions": {
+    "a": [
+      "4",
+      "@",
+      "^"
+    ],
+    "A": [
+      "4",
+      "@",
+      "^"
+    ],
+    "b": [
+      "6"
+    ],
+    "B": [
+      "8"
+    ],
+    "c": [
+      "<",
+      "("
+    ],
+    "C": [
+      "<",
+      "("
+    ],
+    "D": [
+      ")"
+    ],
+    "e": [
+      "3"
+    ],
+    "E": [
+      "3"
+    ],
+    "g": [
+      "9",
+      "6",
+      "&"
+    ],
+    "G": [
+      "9",
+      "6",
+      "&"
+    ],
+    "h": [
+      "#"
+    ],
+    "H": [
+      "#"
+    ],
+    "i": [
+      "1",
+      "!",
+      "|"
+    ],
+    "I": [
+      "1",
+      "!",
+      "|"
+    ],
+    "l": [
+      "1",
+      "|",
+      "7",
+      "2"
+    ],
+    "L": [
+      "1",
+      "|",
+      "7",
+      "2"
+    ],
+    "o": [
+      "0"
+    ],
+    "O": [
+      "0"
+    ],
+    "p": [
+      "9"
+    ],
+    "P": [
+      "9"
+    ],
+    "q": [
+      "9",
+      "2",
+      "&"
+    ],
+    "Q": [
+      "9",
+      "2",
+      "&"
+    ],
+    "s": [
+      "5",
+      "$"
+    ],
+    "S": [
+      "5",
+      "$"
+    ],
+    "t": [
+      "7",
+      "+"
+    ],
+    "T": [
+      "7",
+      "+"
+    ],
+    "z": [
+      "2"
+    ],
+    "Z": [
+      "2"
+    ]
+  }
+}

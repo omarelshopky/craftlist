@@ -21,11 +21,6 @@ run: build
 	@echo "Running $(BINARY_NAME)..."
 	@./$(BUILD_DIR)/$(BINARY_NAME)
 
-# Run tests
-test:
-	@echo "Running tests..."
-	@go test -v ./...
-
 # Lint the code
 lint:
 	@echo "Linting code..."
