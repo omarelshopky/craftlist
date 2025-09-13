@@ -1,80 +1,44 @@
 package generator
 
 import (
-	"bufio"
 	"context"
 	"fmt"
-	"os"
 	"runtime"
 	"strings"
 	"sync"
 
 	"github.com/omarelshopky/craftlist/internal/config"
-	"github.com/omarelshopky/craftlist/pkg/wordlist"
+	"github.com/omarelshopky/craftlist/internal/interfaces"
 )
 
 type Generator struct {
-	config   config.GeneratorConfig
-	wordlist *wordlist.Wordlist
-	patterns *PatternGenerator
+	config      config.GeneratorConfig
+	customWords []string
+	ssids       []string
+	patterns    *PatternProcessor
+	variations  *VariationGenerator
+	output      *OutputManager
 }
 
 func New(cfg config.GeneratorConfig) *Generator {
 	return &Generator{
-		config:   cfg,
-		wordlist: wordlist.New(),
-		patterns: NewPatternGenerator(cfg),
+		config:     cfg,
+		patterns:   NewPatternProcessor(cfg),
+		variations: NewVariationGenerator(cfg),
+		output:     NewOutputManager(),
 	}
 }
 
-func (g *Generator) LoadWordsFromFile(filePath, category string) error {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return fmt.Errorf("failed to open file %s: %w", filePath, err)
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	count := 0
-
-	for scanner.Scan() {
-		word := strings.TrimSpace(scanner.Text())
-		if word == "" {
-			continue
-		}
-
-		switch category {
-		case "words":
-			g.wordlist.AddWord(word)
-		case "ssids":
-			g.wordlist.AddSSID(word)
-		default:
-			return fmt.Errorf("unknown category: %s", category)
-		}
-		count++
-	}
-
-	if err := scanner.Err(); err != nil {
-		return fmt.Errorf("error reading file %s: %w", filePath, err)
-	}
-
-	fmt.Printf("%sLoaded %s%d%s%s words for %s%s\n", config.Colors.Cyan, config.Colors.Bold, count, config.Colors.Reset, config.Colors.Cyan, category, config.Colors.Reset)
-
-	return nil
+func (g *Generator) SetCustomWords(words []string) {
+	g.customWords = words
 }
 
-type PasswordJob struct {
-	Pattern    string
-	CustomWord string
-	CommonWord string
-	SSID       string
-	Year       int
-	Number     string
-	Separators  []string
+func (g *Generator) SetSSIDs(ssids []string) {
+	g.ssids = ssids
 }
 
-func (g *Generator) Generate(ctx context.Context, outputFile string) error {
-	customWords, err := g.getVariations(g.wordlist.GetWords())
+func (g *Generator) Generate(ctx context.Context, outputFile string, printer interfaces.Printer) error {
+	customWords, err := g.getVariations(g.customWords)
 	if err != nil {
 		return fmt.Errorf("failed to get custom word variations: %w", err)
 	}
@@ -84,20 +48,20 @@ func (g *Generator) Generate(ctx context.Context, outputFile string) error {
 		return fmt.Errorf("failed to get common word variations: %w", err)
 	}
 
-	ssids, err := g.getVariations(g.wordlist.GetSSIDs())
+	ssids, err := g.getVariations(g.ssids)
+	if err != nil {
+		return fmt.Errorf("failed to get SSID variations: %w", err)
+	}
 
 	// Generate all number patterns including digit replacements
 	allNumbers := g.patterns.GenerateAllNumberPatterns()
 
 	// Create output file
-	file, err := os.Create(outputFile)
+	writer, err := g.output.CreateWriter(outputFile)
 	if err != nil {
 		return fmt.Errorf("failed to create output file: %w", err)
 	}
-	defer file.Close()
-
-	writer := bufio.NewWriter(file)
-	defer writer.Flush()
+	defer writer.Close()
 
 	// Setup concurrent processing
 	numWorkers := runtime.NumCPU()
@@ -123,12 +87,14 @@ func (g *Generator) Generate(ctx context.Context, outputFile string) error {
 	go func() {
 		defer writerWg.Done()
 		for password := range resultChan {
-			fmt.Fprintln(writer, password)
+			if err := writer.WritePassword(password); err != nil {
+				return
+			}
 			passwordCount++
 
 			if passwordCount%10000 == 0 {
-				fmt.Printf("\rGenerated %s%d%s unique passwords...", config.Colors.Bold, passwordCount, config.Colors.Reset)
-				writer.Flush() // Flush periodically
+				printer.PrintProgress(passwordCount)
+				writer.Flush()
 			}
 		}
 	}()
@@ -146,7 +112,7 @@ func (g *Generator) Generate(ctx context.Context, outputFile string) error {
 	// Wait for writer to finish
 	writerWg.Wait()
 
-	fmt.Printf("\n\n%sGenerated %s%d%s%s total unique passwords%s\n", config.Colors.Green, config.Colors.Bold, passwordCount, config.Colors.Reset, config.Colors.Green, config.Colors.Reset)
+	printer.PrintFinalCount(passwordCount)
 
 	return nil
 }
@@ -198,7 +164,7 @@ func (g *Generator) generateJobsForPattern(ctx context.Context, jobChan chan<- P
 	hasYear := strings.Contains(pattern, "<YEAR>") || strings.Contains(pattern, "<SHORTYEAR>")
 	hasNum := strings.Contains(pattern, "<NUM>")
 
-	separatorCount  := strings.Count(pattern, "<SEP>")
+	separatorCount := strings.Count(pattern, "<SEP>")
 
 	// Generate combinations based on pattern requirements
 	customRange := []string{""}
@@ -243,7 +209,7 @@ func (g *Generator) generateJobsForPattern(ctx context.Context, jobChan chan<- P
 }
 
 func (g *Generator) generateSeparatorCombinations(ctx context.Context, jobChan chan<- PasswordJob, pattern string, remainingSeparators int, customWord, commonWord, ssid string, year int, number string, separators []string) {
-	
+
 	// Base case: no more separators to process
 	if remainingSeparators == 0 {
 		select {
@@ -261,29 +227,33 @@ func (g *Generator) generateSeparatorCombinations(ctx context.Context, jobChan c
 		}
 		return
 	}
-	
+
 	// Recursive case: generate combinations for remaining separators
 	for _, separator := range g.config.Separators {
 		newSeparators := make([]string, len(separators)+1)
 		copy(newSeparators, separators)
 		newSeparators[len(separators)] = separator
-		
+
 		g.generateSeparatorCombinations(ctx, jobChan, pattern, remainingSeparators-1, customWord, commonWord, ssid, year, number, newSeparators)
 	}
 }
 
 func (g *Generator) getVariations(words []string) ([]string, error) {
-	wordVariations, err := g.generateVariations(words, g.patterns.GenerateWordVariations)
+	if len(words) == 0 {
+		return []string{}, nil
+	}
+
+	wordVariations, err := g.generateVariations(words, g.variations.GenerateWordVariations)
 	if err != nil {
 		return nil, err
 	}
 
-	caseVariations, err := g.generateVariations(wordVariations, g.patterns.GenerateCaseVariations)
+	caseVariations, err := g.generateVariations(wordVariations, g.variations.GenerateCaseVariations)
 	if err != nil {
 		return nil, err
 	}
 
-	subVariations, err := g.generateVariations(caseVariations, g.patterns.ApplyAllSubstitutions)
+	subVariations, err := g.generateVariations(caseVariations, g.variations.ApplyAllSubstitutions)
 	if err != nil {
 		return nil, err
 	}
@@ -303,5 +273,5 @@ func (g *Generator) generateVariations(words []string, variationFunc func(string
 		}
 	}
 
-	return g.patterns.ConvertSetToSlice(variations), nil
+	return g.variations.ConvertSetToSlice(variations), nil
 }
