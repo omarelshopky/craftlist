@@ -36,6 +36,9 @@ var rootCmd = &cobra.Command{
 	Version: appVersion,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Context()
+
+		printIntro()
+
 		return run(ctx)
 	},
 }
@@ -73,9 +76,9 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
-	gen := generator.New(cfg.Generator)
+	// Validate
 
-	printIntro()
+	gen := generator.New(cfg.Generator)
 
 	if err := loadWordlistsFromFiles(gen); err != nil {
 		return fmt.Errorf("failed to load wordlists: %w", err)
