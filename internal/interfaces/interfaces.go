@@ -24,6 +24,7 @@ type Printer interface {
 	PrintIntro(version string)
 	PrintPlaceholders(placeholders PlaceholdersConfig)
 	PrintLoadedWords(category string, count int)
+	PrintCountStats(stats map[string]int)
 	PrintProgress(count int)
 	PrintFinalCount(count int)
 	PrintOutputFile(path string)

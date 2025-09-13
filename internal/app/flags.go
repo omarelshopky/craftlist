@@ -12,6 +12,7 @@ type Flags struct {
 	MinYear          int
 	MaxYear          int
 	ListPlaceholders bool
+	CountPasswords   bool
 }
 
 func NewFlags() *Flags {

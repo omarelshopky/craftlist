@@ -16,7 +16,8 @@ func NewCounter(cfg config.GeneratorConfig, placeholders config.PlaceholdersConf
 	return &Counter{config: cfg, placeholders: placeholders}
 }
 
-func (c *Counter) EstimatePasswordCount(customWordsCount, commonWordsCount, ssidsCount, numbersCount int) int {
+func (c *Counter) EstimatePasswordCount(customWordsCount, commonWordsCount, ssidsCount, numbersCount int) (int, map[string]int) {
+	stats := make(map[string]int)
 	total := 0
 	yearCount := c.config.MaxYear - c.config.MinYear + 1
 	separatorsCount := len(c.config.Separators)
@@ -54,9 +55,10 @@ func (c *Counter) EstimatePasswordCount(customWordsCount, commonWordsCount, ssid
         }
 
         total += count
+		stats[pattern] = count
     }
 
-    return total
+    return total, stats
 }
 
 func pow(base, exp int) int {

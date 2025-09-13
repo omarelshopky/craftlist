@@ -73,3 +73,16 @@ func (p *Printer) PrintLoadedWords(category string, count int) {
 	fmt.Printf("%sLoaded %s%d%s%s words for %s%s\n",
 		p.colors.Cyan, p.colors.Bold, count, p.colors.Reset, p.colors.Cyan, category, p.colors.Reset)
 }
+
+func (p *Printer) PrintCountStats(stats map[string]int) {
+	fmt.Printf("\n%s%-50s %s%s\n", p.colors.Green, "PLACEHOLDER", "PASSWORDS COUNT", p.colors.Reset)
+	fmt.Printf("%s%-50s %s%s\n", p.colors.Green, strings.Repeat("-", 40), strings.Repeat("-", 25), p.colors.Reset)
+
+	for pattern, count := range stats {
+		fmt.Printf("%s%-50s %s%s\n", p.colors.Yellow, pattern, p.colors.Reset, p.humanizeNumber(count))
+	}
+}
+
+func (p *Printer) humanizeNumber(number int) string {
+	return p.humanizer.Sprintf("%d", number)
+}

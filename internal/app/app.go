@@ -105,7 +105,15 @@ func (a *App) runGeneration(ctx context.Context) error {
 		return err
 	}
 
-	a.printer.PrintApproximateCount(counter.EstimatePasswordCount(gen.GetCustomWordsCount(), gen.GetCommonWordsCount(), gen.GetSSIDsCount(), gen.GetNumbersCount()))
+	count, stats := counter.EstimatePasswordCount(gen.GetCustomWordsCount(), gen.GetCommonWordsCount(), gen.GetSSIDsCount(), gen.GetNumbersCount())
+
+	a.printer.PrintApproximateCount(count)
+
+	if a.flags.CountPasswords {
+		a.printer.PrintCountStats(stats)
+
+		return nil
+	}
 
 	a.printer.Info("\nGenerating password combinations...")
 
@@ -179,6 +187,7 @@ func (a *App) setupFlags(cmd *cobra.Command) {
 	cmd.Flags().IntVar(&a.flags.MaxYear, "max-year", 2025, "maximum year for combinations")
 
 	cmd.Flags().BoolVar(&a.flags.ListPlaceholders, "list-placeholders", false, "list all available placeholders and exit")
+	cmd.Flags().BoolVar(&a.flags.CountPasswords, "count-passwords", false, "show the estimated number of passwords to be generated for each pattern")
 
 	cmd.MarkFlagsOneRequired("words", "list-placeholders")
 }

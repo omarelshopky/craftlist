@@ -19,7 +19,3 @@ func (p *Printer) PrintApproximateCount(count int) {
 	fmt.Printf("\n%sApproximately %s%s%s%s unique passwords will be generated.%s\n",
 		p.colors.Cyan, p.colors.Bold, p.humanizeNumber(count), p.colors.Reset, p.colors.Cyan, p.colors.Reset)
 }
-
-func (p *Printer) humanizeNumber(number int) string {
-	return p.humanizer.Sprintf("%d", number)
-}
