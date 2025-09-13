@@ -45,3 +45,9 @@ release: clean
 	@GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o $(BUILD_DIR)/$(BINARY_NAME)-linux-amd64 cmd/$(BINARY_NAME)/main.go
 	@GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o $(BUILD_DIR)/$(BINARY_NAME)-darwin-amd64 cmd/$(BINARY_NAME)/main.go
 	@GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o $(BUILD_DIR)/$(BINARY_NAME)-windows-amd64.exe cmd/$(BINARY_NAME)/main.go
+
+test:
+	@go test ./...
+
+testv:
+	@go test ./... -v
