@@ -217,10 +217,6 @@ func (c *Config) loadFromJSON(filePath string) error {
 
 	c.applyJSONConfig(&jsonConfig)
 
-	if c.validate() != nil {
-		return fmt.Errorf("invalid config values: %w", err)
-	}
-
 	return nil
 }
 
@@ -242,7 +238,7 @@ func (c *Config) applyJSONConfig(jsonConfig *JSONConfig) {
 	}
 }
 
-func (c *Config) validate() error {
+func (c *Config) Validate() error {
 	if c.Generator.MinYear > c.Generator.MaxYear {
 		return fmt.Errorf("min_year (%d) cannot be greater than max_year (%d)", 
 			c.Generator.MinYear, c.Generator.MaxYear)
