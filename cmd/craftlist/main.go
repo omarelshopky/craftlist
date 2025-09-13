@@ -3,13 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"reflect"
 	"strings"
 	"syscall"
 	"time"
+	"errors"
 
 	"github.com/omarelshopky/craftlist/internal/config"
 	"github.com/omarelshopky/craftlist/internal/generator"
@@ -35,11 +35,15 @@ type flags struct {
 
 var cliFlags flags
 
+var SilentErr = errors.New("SilentErr")
+
 var rootCmd = &cobra.Command{
 	Use:     fmt.Sprintf("%s -w words.txt", appName),
 	Long:    "A tool for generating customized wordlists tailored to a company's specific details.",
 	Version: appVersion,
 	RunE: runCommand,
+	SilenceUsage: true,
+	SilenceErrors: true,
 }
 
 func main() {
@@ -47,12 +51,24 @@ func main() {
 	defer cancel()
 
 	rootCmd.SetContext(ctx)
+
 	if err := rootCmd.Execute(); err != nil {
-		log.Fatal(err)
+		if err != SilentErr {
+			fmt.Fprint(os.Stderr)
+			fmt.Printf("\n%s%v%s\n", config.Colors.Red, err, config.Colors.Reset)
+		}
+		os.Exit(1)
 	}
 }
 
 func init() {
+	rootCmd.SetFlagErrorFunc(func(cmd *cobra.Command, err error) error {
+		cmd.Printf("%s%v%s\n\n", config.Colors.Red, err, config.Colors.Reset)
+		cmd.Println(cmd.UsageString())
+	
+		return SilentErr
+	})
+
 	setupFlags()
 }
 
@@ -101,11 +117,11 @@ func handleListPlaceholders() error {
 func runGeneration(ctx context.Context) error {
 	cfg, err := buildConfiguration()
 	if err != nil {
-		return fmt.Errorf("failed to build configuration: %w", err)
+		return err
 	}
 
 	if err := cfg.Validate(); err != nil {
-		return fmt.Errorf("configuration validation failed: %w", err)
+		return err
 	}
 
 	gen := generator.New(cfg.Generator)
@@ -114,13 +130,13 @@ func runGeneration(ctx context.Context) error {
 		return fmt.Errorf("failed to load word lists: %w", err)
 	}
 
-	fmt.Println("\nGenerating password combinations...")
+	fmt.Printf("\n%sGenerating password combinations...%s\n", config.Colors.Cyan, config.Colors.Reset)
 	if err := gen.Generate(ctx, cfg.Output.Filename); err != nil {
 		return fmt.Errorf("password generation failed: %w", err)
 	}
 
-	fmt.Printf("Output saved to: %s\n", cfg.Output.Filename)
-	
+	fmt.Printf("Output saved to: %s%s%s\n", config.Colors.Bold, cfg.Output.Filename, config.Colors.Reset)
+
 	return nil
 }
 
@@ -164,15 +180,15 @@ func loadWordLists(gen *generator.Generator) error {
 }
 
 func printPlaceholders(placeholders config.PlaceholdersConfig) error {
-	fmt.Printf("Available Placeholders:\n\n")
-	fmt.Printf("%-15s %s\n", "PLACEHOLDER", "DESCRIPTION")
-	fmt.Printf("%-15s %s\n", strings.Repeat("-", 15), strings.Repeat("-", 50))
+	fmt.Printf("%sAvailable Placeholders:%s\n\n", config.Colors.Bold, config.Colors.Reset)
+	fmt.Printf("%s%-15s %s%s\n", config.Colors.Green, "PLACEHOLDER", "DESCRIPTION", config.Colors.Reset)
+	fmt.Printf("%s%-15s %s%s\n", config.Colors.Green, strings.Repeat("-", 15), strings.Repeat("-", 50), config.Colors.Reset)
 
 	values := reflect.ValueOf(placeholders)
     
     for idx := 0; idx < values.NumField(); idx++ {        
 		if placeholder, ok := values.Field(idx).Interface().(config.Placeholder); ok {
-			fmt.Printf("%-15s %s\n", placeholder.Format, placeholder.Description)
+			fmt.Printf("%s%-15s %s%s\n", config.Colors.Yellow, placeholder.Format, config.Colors.Reset, placeholder.Description)
 		}
     }
 
@@ -181,7 +197,7 @@ func printPlaceholders(placeholders config.PlaceholdersConfig) error {
 
 func printIntro() {
 	fmt.Printf(
-`                __ _   _ _     _   
+`                 __ _   _ _     _   
                 / _| | | (_)   | |  
   ___ _ __ __ _| |_| |_| |_ ___| |_ 
  / __| '__/ _' |  _| __| | / __| __|

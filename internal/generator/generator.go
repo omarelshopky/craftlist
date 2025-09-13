@@ -58,7 +58,7 @@ func (g *Generator) LoadWordsFromFile(filePath, category string) error {
 		return fmt.Errorf("error reading file %s: %w", filePath, err)
 	}
 
-	fmt.Printf("Loaded %d words for %s\n", count, category)
+	fmt.Printf("%sLoaded %s%d%s%s words for %s%s\n", config.Colors.Cyan, config.Colors.Bold, count, config.Colors.Reset, config.Colors.Cyan, category, config.Colors.Reset)
 
 	return nil
 }
@@ -127,7 +127,7 @@ func (g *Generator) Generate(ctx context.Context, outputFile string) error {
 			passwordCount++
 
 			if passwordCount%10000 == 0 {
-				fmt.Printf("\rGenerated %d unique passwords...", passwordCount)
+				fmt.Printf("\rGenerated %s%d%s unique passwords...", config.Colors.Bold, passwordCount, config.Colors.Reset)
 				writer.Flush() // Flush periodically
 			}
 		}
@@ -146,7 +146,7 @@ func (g *Generator) Generate(ctx context.Context, outputFile string) error {
 	// Wait for writer to finish
 	writerWg.Wait()
 
-	fmt.Printf("\n\nGenerated %d total unique passwords\n", passwordCount)
+	fmt.Printf("\n\n%sGenerated %s%d%s%s total unique passwords%s\n", config.Colors.Green, config.Colors.Bold, passwordCount, config.Colors.Reset, config.Colors.Green, config.Colors.Reset)
 
 	return nil
 }
