@@ -27,4 +27,5 @@ type Printer interface {
 	PrintProgress(count int)
 	PrintFinalCount(count int)
 	PrintOutputFile(path string)
+	PrintApproximateCount(count int)
 }

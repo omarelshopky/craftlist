@@ -93,12 +93,19 @@ func (a *App) runGeneration(ctx context.Context) error {
 		return err
 	}
 
-	gen := generator.New(cfg.Generator)
+	gen := generator.New(cfg.Generator, cfg.Placeholders)
+	counter := generator.NewCounter(cfg.Generator, cfg.Placeholders)
 	loader := wordlist.NewLoader()
 
 	if err := a.loadWordLists(gen, loader); err != nil {
 		return fmt.Errorf("failed to load word lists: %w", err)
 	}
+
+	if gen.PrepareVariations() != nil {
+		return err
+	}
+
+	a.printer.PrintApproximateCount(counter.EstimatePasswordCount(gen.GetCustomWordsCount(), gen.GetCommonWordsCount(), gen.GetSSIDsCount(), gen.GetNumbersCount()))
 
 	a.printer.Info("\nGenerating password combinations...")
 

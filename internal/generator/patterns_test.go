@@ -9,7 +9,17 @@ import (
 )
 
 func TestProcessPattern(t *testing.T) {
-	pp := NewPatternProcessor(config.GeneratorConfig{})
+	placeholders := config.PlaceholdersConfig{
+		CustomWord:  config.Placeholder{Format: "<CUSTOM>"},
+		CommonWord:  config.Placeholder{Format: "<COMMON>"},
+		SSID:        config.Placeholder{Format: "<SSID>"},
+		Number:      config.Placeholder{Format: "<NUM>"},
+		Year:        config.Placeholder{Format: "<YEAR>"},
+		ShortYear:   config.Placeholder{Format: "<SHORTYEAR>"},
+		Separator:   config.Placeholder{Format: "<SEP>"},
+	}
+
+	pp := NewPatternProcessor(config.GeneratorConfig{}, placeholders)
 
 	tests := []struct {
 		name     string
@@ -67,7 +77,16 @@ func TestGenerateAllNumberPatterns(t *testing.T) {
 	cfg := config.GeneratorConfig{
 		NumberPatterns: []string{"12", "dd"},
 	}
-	pp := NewPatternProcessor(cfg)
+	placeholders := config.PlaceholdersConfig{
+		CustomWord:  config.Placeholder{Format: "<CUSTOM>"},
+		CommonWord:  config.Placeholder{Format: "<COMMON>"},
+		SSID:        config.Placeholder{Format: "<SSID>"},
+		Number:      config.Placeholder{Format: "<NUM>"},
+		Year:        config.Placeholder{Format: "<YEAR>"},
+		ShortYear:   config.Placeholder{Format: "<SHORTYEAR>"},
+		Separator:   config.Placeholder{Format: "<SEP>"},
+	}
+	pp := NewPatternProcessor(cfg, placeholders)
 
 	got := pp.GenerateAllNumberPatterns()
 
@@ -78,7 +97,7 @@ func TestGenerateAllNumberPatterns(t *testing.T) {
 }
 
 func TestExpandDigitPattern(t *testing.T) {
-	pp := NewPatternProcessor(config.GeneratorConfig{})
+	pp := NewPatternProcessor(config.GeneratorConfig{}, config.PlaceholdersConfig{})
 
 	tests := []struct {
 		name     string
@@ -102,7 +121,7 @@ func TestExpandDigitPattern(t *testing.T) {
 }
 
 func TestGenerateDigitCombinations(t *testing.T) {
-	pp := NewPatternProcessor(config.GeneratorConfig{})
+	pp := NewPatternProcessor(config.GeneratorConfig{}, config.PlaceholdersConfig{})
 	results := []string{}
 	pp.generateDigitCombinations("d", "", 0, &results)
 

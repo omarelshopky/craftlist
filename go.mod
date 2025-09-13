@@ -1,8 +1,13 @@
 module github.com/omarelshopky/craftlist
 
-go 1.23
+go 1.24.0
 
-require github.com/spf13/cobra v1.10.1
+toolchain go1.24.7
+
+require (
+	github.com/spf13/cobra v1.10.1
+	golang.org/x/text v0.29.0
+)
 
 require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect

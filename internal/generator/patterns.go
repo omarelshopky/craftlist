@@ -8,7 +8,8 @@ import (
 )
 
 type PatternProcessor struct {
-	config config.GeneratorConfig
+	config 			config.GeneratorConfig
+	placeholders 	config.PlaceholdersConfig
 }
 
 type PasswordJob struct {
@@ -21,30 +22,30 @@ type PasswordJob struct {
 	Separators []string
 }
 
-func NewPatternProcessor(cfg config.GeneratorConfig) *PatternProcessor {
-	return &PatternProcessor{config: cfg}
+func NewPatternProcessor(cfg config.GeneratorConfig, placeholders config.PlaceholdersConfig) *PatternProcessor {
+	return &PatternProcessor{config: cfg, placeholders: placeholders}
 }
 
 func (pp *PatternProcessor) ProcessPattern(job PasswordJob) string {
 	password := job.Pattern
 
-	password = strings.ReplaceAll(password, "<CUSTOM>", job.CustomWord)
-	password = strings.ReplaceAll(password, "<COMMON>", job.CommonWord)
-	password = strings.ReplaceAll(password, "<SSID>", job.SSID)
-	password = strings.ReplaceAll(password, "<NUM>", job.Number)
+	password = strings.ReplaceAll(password, pp.placeholders.CustomWord.Format, job.CustomWord)
+	password = strings.ReplaceAll(password, pp.placeholders.CommonWord.Format, job.CommonWord)
+	password = strings.ReplaceAll(password, pp.placeholders.SSID.Format, job.SSID)
+	password = strings.ReplaceAll(password, pp.placeholders.Number.Format, job.Number)
 
 	if job.Year > 0 {
 		yearStr := strconv.Itoa(job.Year)
 		shortYear := yearStr[2:]
-		password = strings.ReplaceAll(password, "<YEAR>", yearStr)
-		password = strings.ReplaceAll(password, "<SHORTYEAR>", shortYear)
+		password = strings.ReplaceAll(password, pp.placeholders.Year.Format, yearStr)
+		password = strings.ReplaceAll(password, pp.placeholders.ShortYear.Format, shortYear)
 	}
 
 	// Handle multiple separators by replacing each <SEP> sequentially
-	if strings.Contains(password, "<SEP>") {
+	if strings.Contains(password, pp.placeholders.Separator.Format) {
 		separatorIndex := 0
-		for strings.Contains(password, "<SEP>") && separatorIndex < len(job.Separators) {
-			password = strings.Replace(password, "<SEP>", job.Separators[separatorIndex], 1)
+		for strings.Contains(password, pp.placeholders.Separator.Format) && separatorIndex < len(job.Separators) {
+			password = strings.Replace(password, pp.placeholders.Separator.Format, job.Separators[separatorIndex], 1)
 			separatorIndex++
 		}
 	}

@@ -6,15 +6,19 @@ import (
 	"strings"
 
 	"github.com/omarelshopky/craftlist/internal/interfaces"
+	"golang.org/x/text/language"
+    "golang.org/x/text/message"
 )
 
 type Printer struct {
 	colors Colors
+	humanizer *message.Printer
 }
 
 func NewPrinter() *Printer {
 	return &Printer{
 		colors: DefaultColors,
+		humanizer: message.NewPrinter(language.English),
 	}
 }
 

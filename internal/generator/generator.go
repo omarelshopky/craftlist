@@ -12,20 +12,24 @@ import (
 )
 
 type Generator struct {
-	config      config.GeneratorConfig
-	customWords []string
-	ssids       []string
-	patterns    *PatternProcessor
-	variations  *VariationGenerator
-	output      *OutputManager
+	config      	config.GeneratorConfig
+	placeholders 	config.PlaceholdersConfig
+	customWords 	[]string
+	commonWords 	[]string
+	ssids       	[]string
+	numbers 		[]string
+	patterns    	*PatternProcessor
+	variations  	*VariationGenerator
+	output      	*OutputManager
 }
 
-func New(cfg config.GeneratorConfig) *Generator {
+func New(cfg config.GeneratorConfig, placeholders config.PlaceholdersConfig) *Generator {
 	return &Generator{
-		config:     cfg,
-		patterns:   NewPatternProcessor(cfg),
-		variations: NewVariationGenerator(cfg),
-		output:     NewOutputManager(),
+		config:     	cfg,
+		placeholders: 	placeholders,
+		patterns:   	NewPatternProcessor(cfg, placeholders),
+		variations: 	NewVariationGenerator(cfg),
+		output:     	NewOutputManager(),
 	}
 }
 
@@ -37,25 +41,46 @@ func (g *Generator) SetSSIDs(ssids []string) {
 	g.ssids = ssids
 }
 
-func (g *Generator) Generate(ctx context.Context, outputFile string, printer interfaces.Printer) error {
-	customWords, err := g.getVariations(g.customWords)
+func (g *Generator) GetCustomWordsCount() int{
+	return len(g.customWords)
+}
+
+func (g *Generator) GetCommonWordsCount() int {
+	return len(g.commonWords)
+}
+
+func (g *Generator) GetSSIDsCount() int {
+	return len(g.ssids)
+}
+
+func (g *Generator) GetNumbersCount() int {
+	return len(g.numbers)
+}
+
+func (g *Generator) PrepareVariations() error {
+	var err error
+
+	g.customWords, err = g.getVariations(g.customWords)
 	if err != nil {
 		return fmt.Errorf("failed to get custom word variations: %w", err)
 	}
 
-	commonWords, err := g.getVariations(g.config.CommonWords)
+	g.commonWords, err = g.getVariations(g.config.CommonWords)
 	if err != nil {
 		return fmt.Errorf("failed to get common word variations: %w", err)
 	}
 
-	ssids, err := g.getVariations(g.ssids)
+	g.ssids, err = g.getVariations(g.ssids)
 	if err != nil {
 		return fmt.Errorf("failed to get SSID variations: %w", err)
 	}
 
-	// Generate all number patterns including digit replacements
-	allNumbers := g.patterns.GenerateAllNumberPatterns()
+	g.numbers = g.patterns.GenerateAllNumberPatterns()
 
+	return nil
+}
+
+func (g *Generator) Generate(ctx context.Context, outputFile string, printer interfaces.Printer) error {
 	// Create output file
 	writer, err := g.output.CreateWriter(outputFile)
 	if err != nil {
@@ -102,7 +127,7 @@ func (g *Generator) Generate(ctx context.Context, outputFile string, printer int
 	// Generate jobs based on patterns
 	go func() {
 		defer close(jobChan)
-		g.generateJobs(ctx, jobChan, customWords, commonWords, ssids, allNumbers)
+		g.generateJobs(ctx, jobChan)
 	}()
 
 	// Wait for all workers to finish
@@ -139,7 +164,7 @@ func (g *Generator) worker(ctx context.Context, jobs <-chan PasswordJob, results
 	}
 }
 
-func (g *Generator) generateJobs(ctx context.Context, jobChan chan<- PasswordJob, customWords, commonWords, ssids, allNumbers []string) {
+func (g *Generator) generateJobs(ctx context.Context, jobChan chan<- PasswordJob) {
 	for _, pattern := range g.config.Patterns {
 		select {
 		case <-ctx.Done():
@@ -148,38 +173,38 @@ func (g *Generator) generateJobs(ctx context.Context, jobChan chan<- PasswordJob
 		}
 
 		// Ignore patterns with SSID if not entered
-		if len(ssids) == 0 && strings.Contains(pattern, "<SSID>") {
+		if len(g.ssids) == 0 && strings.Contains(pattern, g.placeholders.SSID.Format) {
 			continue
 		}
 
-		g.generateJobsForPattern(ctx, jobChan, pattern, customWords, commonWords, ssids, allNumbers)
+		g.generateJobsForPattern(ctx, jobChan, pattern)
 	}
 }
 
-func (g *Generator) generateJobsForPattern(ctx context.Context, jobChan chan<- PasswordJob, pattern string, customWords, commonWords, ssids, allNumbers []string) {
+func (g *Generator) generateJobsForPattern(ctx context.Context, jobChan chan<- PasswordJob, pattern string) {
 	// Determine what placeholders exist in the pattern
-	hasCustom := strings.Contains(pattern, "<CUSTOM>")
-	hasCommon := strings.Contains(pattern, "<COMMON>")
-	hasSSID := strings.Contains(pattern, "<SSID>")
-	hasYear := strings.Contains(pattern, "<YEAR>") || strings.Contains(pattern, "<SHORTYEAR>")
-	hasNum := strings.Contains(pattern, "<NUM>")
+	hasCustom := strings.Contains(pattern, g.placeholders.CustomWord.Format)
+	hasCommon := strings.Contains(pattern, g.placeholders.CommonWord.Format)
+	hasSSID := strings.Contains(pattern, g.placeholders.SSID.Format)
+	hasYear := strings.Contains(pattern, g.placeholders.Year.Format) || strings.Contains(pattern, g.placeholders.ShortYear.Format)
+	hasNum := strings.Contains(pattern, g.placeholders.Number.Format)
 
-	separatorCount := strings.Count(pattern, "<SEP>")
+	separatorCount := strings.Count(pattern, g.placeholders.Separator.Format)
 
 	// Generate combinations based on pattern requirements
 	customRange := []string{""}
 	if hasCustom {
-		customRange = customWords
+		customRange = g.customWords
 	}
 
 	commonRange := []string{""}
 	if hasCommon {
-		commonRange = commonWords
+		commonRange = g.commonWords
 	}
 
 	ssidRange := []string{""}
 	if hasSSID {
-		ssidRange = ssids
+		ssidRange = g.ssids
 	}
 
 	yearRange := []int{0}
@@ -192,7 +217,7 @@ func (g *Generator) generateJobsForPattern(ctx context.Context, jobChan chan<- P
 
 	numberRange := []string{""}
 	if hasNum {
-		numberRange = allNumbers
+		numberRange = g.numbers
 	}
 
 	for _, customWord := range customRange {
