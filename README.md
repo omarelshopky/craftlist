@@ -24,6 +24,14 @@ A configurable wordlist generator that creates targeted password lists based on 
 - Sequential number patterns
 - Multiple separator handling
 - Complex multi-element patterns
+- Pattern validation with syntax error reporting before execution
+- `--list-placeholders` flag to display all available placeholders and descriptions
+
+### Enhanced Output & Reporting
+
+- Colorful output with humanized numbers (e.g., 1,000,000 format)
+- Approximate password count displayed before generation
+- `--count-passwords` flag to show the number of generated passwords per pattern
 
 ### High Performance
 
@@ -49,7 +57,7 @@ go install github.com/omarelshopky/craftlist/cmd/craftlist@latest
 ## Usage
 
 ```bash
-craftlist -w words.ls [-s ssids.ls] [-c config.json] [-o passwords.ls] [-max-length 8] [-max-length 64] [--max-year 2025] [--min-year 1990]
+craftlist -w words.ls [-s ssids.ls] [-c config.json] [-o passwords.ls] [-max-length 8] [-max-length 64] [--max-year 2025] [--min-year 1990] [--count-passwords] | [--list-placeholders]
 ```
 
 ## Quick Start
@@ -88,6 +96,8 @@ CraftList supports the following placeholders in your password patterns:
 - `<SHORTYEAR>`: Inserts two-digit year based on the range defined in flags or config file (e.g., 25)
 - `<NUM>`: Inserts numbers based on the list defined in your config file
 
+> Use `--list-placeholders` to see all placeholders and their descriptions.
+
 ### Special Numeric Notation
 
 You can use `d` characters to generate digit ranges:
@@ -96,22 +106,6 @@ You can use `d` characters to generate digit ranges:
 - `5d` generates all numbers from 50 to 59
 - `d` generates all single digits from 0 to 9
 
-## Project Structure
-
-```
-craftlist/
-├── cmd/craftlist/          # Application entry point
-├── internal/               # Private application code
-│   ├── config/             # Configuration management
-│   ├── generator/          # Password generation logic
-├── pkg/                    # Public packages
-│   └── wordlist/           # Wordlist management
-├── examples/               # Examples
-│   └── config.json         # Config file sample
-├── go.mod                  # Go module definition
-├── Makefile                # Build automation
-└── README.md               # Documentation
-```
 
 ## Development
 
@@ -124,4 +118,10 @@ make lint
 
 # Build for multiple platforms
 make release
+
+# Run tests
+make test
+
+# Run verbose tests
+make testv
 ```
