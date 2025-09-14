@@ -41,20 +41,20 @@ func (g *Generator) SetSSIDs(ssids []string) {
 	g.ssids = ssids
 }
 
-func (g *Generator) GetCustomWordsCount() int{
-	return len(g.customWords)
+func (g *Generator) GetCustomWords() []string {
+	return g.customWords
 }
 
-func (g *Generator) GetCommonWordsCount() int {
-	return len(g.commonWords)
+func (g *Generator) GetCommonWords() []string {
+	return g.commonWords
 }
 
-func (g *Generator) GetSSIDsCount() int {
-	return len(g.ssids)
+func (g *Generator) GetSSIDs() []string {
+	return g.ssids
 }
 
-func (g *Generator) GetNumbersCount() int {
-	return len(g.numbers)
+func (g *Generator) GetNumbers() []string {
+	return g.numbers
 }
 
 func (g *Generator) PrepareVariations() error {

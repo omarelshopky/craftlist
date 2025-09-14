@@ -6,7 +6,7 @@ import (
 	"github.com/omarelshopky/craftlist/internal/config"
 )
 
-func TestEstimatePasswordCount(t *testing.T) {
+func TestCountPasswords(t *testing.T) {
 	placeholders := config.PlaceholdersConfig{
 		CustomWord:  config.Placeholder{Format: "<CUSTOM>"},
 		CommonWord:  config.Placeholder{Format: "<COMMON>"},
@@ -18,56 +18,73 @@ func TestEstimatePasswordCount(t *testing.T) {
 	}
 
 	cfg := config.GeneratorConfig{
-		MinYear:     2020,
-		MaxYear:     2021,
+		MinYear:     2025,
+		MaxYear:     2026,
+		MinPasswordLen: 8,
+		MaxPasswordLen: 64,
 		Separators:  []string{"-", "_"},
 		Patterns:    []string{"<CUSTOM><SEP><YEAR>", "<COMMON><SEP><NUM>", "<SSID>", "<CUSTOM><COMMON><NUM>"},
 	}
 
 	tests := []struct {
-		name              string
-		customWordsCount  int
-		commonWordsCount  int
-		ssidsCount        int
-		numbersCount      int
-		expected          int
+		name         string
+		customWords  []string
+		commonWords  []string
+		ssids        []string
+		numbers      []string
+		minLength 	 int
+		expected     int
 	}{
 		{
-			name:             "basic counts",
-			customWordsCount: 2,
-			commonWordsCount: 2,
-			ssidsCount:       2,
-			numbersCount:     2,
-			expected:         (2 * 2 * 2) + (2 * 2 * 2) + (2) + (2 * 2 * 2),
+			name:        	"basic counts with password length limit",
+			customWords: 	[]string{"evil", "corp"},
+			commonWords: 	[]string{"password", "it"},
+			ssids:       	[]string{"dev"},
+			numbers:     	[]string{"1234", "123"},
+			expected:    	(2 * 2 * 2) + (1 * 2 * 2) + (0) + (2 * 2 * 2),
 		},
 		{
-			name:             "no custom words",
-			customWordsCount: 0,
-			commonWordsCount: 2,
-			ssidsCount:       1,
-			numbersCount:     2,
-			expected:         (1 * 2 * 2) + (2 * 2 * 2) + (1) + (1 * 2 * 2),
+			name:    		"basic counts without password length limit",
+			customWords: 	[]string{"evil", "corp"},
+			commonWords: 	[]string{"password", "it"},
+			ssids:       	[]string{"dev"},
+			numbers:     	[]string{"1234", "123"},
+			minLength:		1,
+			expected:      	(2 * 2 * 2) + (2 * 2 * 2) + (1) + (2 * 2 * 2),
 		},
 		{
-			name:             "no patterns",
-			customWordsCount: 2,
-			commonWordsCount: 2,
-			ssidsCount:       2,
-			numbersCount:     2,
-			expected:         0,
+			name:        	"no ssids",
+			customWords: 	[]string{"evil", "corp"},
+			commonWords: 	[]string{"password", "it"},
+			ssids:       	[]string{},
+			numbers:     	[]string{"1234", "123"},
+			minLength:		1,
+			expected:    	(2 * 2 * 2) + (2 * 2 * 2) + (0) + (2 * 2 * 2),
+		},
+		{
+			name:        	"no patterns",
+			customWords: 	[]string{"evil", "corp"},
+			commonWords: 	[]string{"password", "it"},
+			ssids:       	[]string{"dev"},
+			numbers:     	[]string{"1234", "123"},
+			expected:       0,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Clone config to reset patterns for each test
 			testCfg := cfg
 			if tt.name == "no patterns" {
 				testCfg.Patterns = []string{}
 			}
 
+			if tt.minLength != 0 {
+				testCfg.MinPasswordLen = tt.minLength
+			}
+
 			c := NewCounter(testCfg, placeholders)
-			result := c.EstimatePasswordCount(tt.customWordsCount, tt.commonWordsCount, tt.ssidsCount, tt.numbersCount)
+			result, _ := c.CountPasswords(tt.customWords, tt.commonWords, tt.ssids, tt.numbers)
+
 			if result != tt.expected {
 				t.Errorf("expected %d, got %d", tt.expected, result)
 			}

@@ -15,7 +15,7 @@ import (
 
 const (
 	AppName    = "craftlist"
-	AppVersion = "0.2.0"
+	AppVersion = "0.2.1"
 )
 
 type App struct {
@@ -105,9 +105,9 @@ func (a *App) runGeneration(ctx context.Context) error {
 		return err
 	}
 
-	count, stats := counter.EstimatePasswordCount(gen.GetCustomWordsCount(), gen.GetCommonWordsCount(), gen.GetSSIDsCount(), gen.GetNumbersCount())
+	count, stats := counter.CountPasswords(gen.GetCustomWords(), gen.GetCommonWords(), gen.GetSSIDs(), gen.GetNumbers())
 
-	a.printer.PrintApproximateCount(count)
+	a.printer.PrintTotalPasswordsCount(count)
 
 	if a.flags.CountPasswords {
 		a.printer.PrintCountStats(stats)

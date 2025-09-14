@@ -15,7 +15,7 @@ func (p *Printer) PrintOutputFile(path string) {
 	p.Success(fmt.Sprintf("Output saved to: %s%s%s\n", p.colors.Bold, path, p.colors.Reset))
 }
 
-func (p *Printer) PrintApproximateCount(count int) {
-	fmt.Printf("\n%sApproximately %s%s%s%s unique passwords will be generated.%s\n",
+func (p *Printer) PrintTotalPasswordsCount(count int) {
+	fmt.Printf("\n%sA total of %s%s%s%s unique passwords will be generated.%s\n",
 		p.colors.Cyan, p.colors.Bold, p.humanizeNumber(count), p.colors.Reset, p.colors.Cyan, p.colors.Reset)
 }

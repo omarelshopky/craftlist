@@ -30,7 +30,7 @@ A configurable wordlist generator that creates targeted password lists based on 
 ### Enhanced Output & Reporting
 
 - Colorful output with humanized numbers (e.g., 1,000,000 format)
-- Approximate password count displayed before generation
+- Total password count displayed before generation
 - `--count-passwords` flag to show the number of generated passwords per pattern
 
 ### High Performance
